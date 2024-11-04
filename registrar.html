@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Usuário</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f8ff;
+            font-family: 'Arial', sans-serif;
+        }
+        .register-container {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        .register-container h1 {
+            margin-bottom: 1.5rem;
+            color: #2A75BB;
+        }
+        .register-container input[type="text"],
+        .register-container input[type="password"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid #2A75BB;
+            border-radius: 5px;
+        }
+        .register-container button {
+            background-color: #2A75BB;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .register-container button:hover {
+            background-color: #3B4CCA;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <h1>Registro de Usuário</h1>
+        <form id="registerForm">
+            <input type="text" id="username" placeholder="Nome de Usuário" required><br>
+            <input type="password" id="password" placeholder="Senha" required><br>
+            <button type="submit">Registrar</button>
+        </form>
+        <div id="resultMessage" style="margin-top: 15px;"></div>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            fetch('http://localhost:3000/usuarios', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ nome: username, senha: password })
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('resultMessage').textContent = 'Registro realizado com sucesso!';
+                    document.getElementById('resultMessage').style.color = 'green';
+                    setTimeout(()=>{
+                        window.location.href = 'index.html';
+                    },300)
+                } else {
+                    return response.text().then(text => { throw new Error(text) });
+                }
+            })
+            .catch(error => {
+                document.getElementById('resultMessage').textContent = `Erro no registro: ${error.message}`;
+                document.getElementById('resultMessage').style.color = 'red';
+            });
+        });
+    </script>
+</body>
+</html>

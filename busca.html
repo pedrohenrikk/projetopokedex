@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Pokémon</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f8ff;
+            font-family: 'Arial', sans-serif;
+        }
+        .search-container {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        .search-container h1 {
+            margin-bottom: 1.5rem;
+            color: #2A75BB;
+        }
+        .search-container input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 2px solid #2A75BB;
+            border-radius: 5px;
+        }
+        .search-container button {
+            background-color: #FFCB05;
+            color: #2A75BB;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .search-container button:hover {
+            background-color: #FFD733;
+        }
+    </style>
+</head>
+<body>
+    <div class="search-container">
+        <h1>Buscar Pokémon</h1>
+        <input type="text" id="pokemonName" placeholder="Digite o nome do Pokémon" required>
+        <button onclick="searchPokemon()">Buscar</button>
+        <div id="pokemonResult" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        // Função para verificar a validade do token com uma requisição ao servidor
+        async function checkToken() {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+
+            if (!token) {
+                alert('Token não encontrado. Redirecionando para a página de login.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/usuarios/check-login?token=${encodeURIComponent(token)}`);
+                
+                if (response.status === 204) {
+                    // Token válido, mantém o usuário na página
+                    console.log('Token válido');
+                } else {
+                    // Token inválido, redireciona para a página de login
+                    alert('Token inválido. Redirecionando para a página de login.');
+                    window.location.href = 'index.html';
+                }
+            } catch (error) {
+                console.error('Erro ao verificar o token:', error);
+                alert('Erro na verificação do token. Redirecionando para a página de login.');
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Verifica o token ao carregar a página
+        window.onload = checkToken;
+
+        function searchPokemon() {
+            const name = document.getElementById('pokemonName').value.trim().toLowerCase();
+            if (name) {
+                fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)
+                    .then(response => {
+                        if (response.status === 200) {
+                            return response.json();
+                        } else {
+                            throw new Error('Pokémon não encontrado');
+                        }
+                    })
+                    .then(data => {
+                        document.getElementById('pokemonResult').innerHTML = `
+                            <h2>${data.name.toUpperCase()}</h2>
+                            <img src="${data.sprites.front_default}" alt="${data.name}">
+                            <p>Altura: ${data.height / 10} m</p>
+                            <p>Peso: ${data.weight / 10} kg</p>
+                        `;
+                    })
+                    .catch(error => {
+                        document.getElementById('pokemonResult').innerHTML = `<p style="color: red;">${error.message}</p>`;
+                    });
+            } else {
+                alert('Por favor, insira o nome de um Pokémon.');
+            }
+        }
+    </script>
+</body>
+</html>
