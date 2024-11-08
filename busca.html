@@ -98,7 +98,7 @@
                 if (response.status !== 200) throw new Error('Pokémon não encontrado');
                 const data = await response.json();
 
-                // Exibe o tipo por extenso
+                
                 const types = data.types.map(typeInfo => typeInfo.type.name).join(', ');
 
                 document.getElementById('pokemonResult').innerHTML = `
@@ -110,18 +110,18 @@
                     <div id="evolutions" style="margin-top: 20px;"></div>
                 `;
 
-                // Busca a cadeia de evolução
+                
                 const speciesResponse = await fetch(data.species.url);
                 const speciesData = await speciesResponse.json();
 
-                // Busca a cadeia de evolução
+                
                 const evolutionResponse = await fetch(speciesData.evolution_chain.url);
                 const evolutionData = await evolutionResponse.json();
 
                 const evolutions = [];
                 let currentEvolution = evolutionData.chain;
 
-                // Percorre a cadeia de evolução para obter todos os estágios e imagens
+                
                 while (currentEvolution) {
                     const pokemonName = currentEvolution.species.name;
                     const pokemonData = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonName}`).then(res => res.json());
@@ -130,7 +130,7 @@
                     currentEvolution = currentEvolution.evolves_to[0];
                 }
 
-                // Exibe a cadeia de evolução
+                
                 document.getElementById('evolutions').innerHTML = `
                     <h3>Evoluções:</h3>
                     <div style="display: flex; gap: 10px; justify-content: center;">
