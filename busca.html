@@ -58,7 +58,6 @@
     </div>
 
     <script>
-        // Função para verificar a validade do token com uma requisição ao servidor
         async function checkToken() {
             const params = new URLSearchParams(window.location.search);
             const token = params.get('token');
@@ -73,10 +72,8 @@
                 const response = await fetch(`http://localhost:3000/usuarios/check-login?token=${encodeURIComponent(token)}`);
                 
                 if (response.status === 204) {
-                    // Token válido, mantém o usuário na página
                     console.log('Token válido');
                 } else {
-                    // Token inválido, redireciona para a página de login
                     alert('Token inválido. Redirecionando para a página de login.');
                     window.location.href = 'index.html';
                 }
@@ -87,33 +84,66 @@
             }
         }
 
-        // Verifica o token ao carregar a página
         window.onload = checkToken;
 
-        function searchPokemon() {
+        async function searchPokemon() {
             const name = document.getElementById('pokemonName').value.trim().toLowerCase();
-            if (name) {
-                fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)
-                    .then(response => {
-                        if (response.status === 200) {
-                            return response.json();
-                        } else {
-                            throw new Error('Pokémon não encontrado');
-                        }
-                    })
-                    .then(data => {
-                        document.getElementById('pokemonResult').innerHTML = `
-                            <h2>${data.name.toUpperCase()}</h2>
-                            <img src="${data.sprites.front_default}" alt="${data.name}">
-                            <p>Altura: ${data.height / 10} m</p>
-                            <p>Peso: ${data.weight / 10} kg</p>
-                        `;
-                    })
-                    .catch(error => {
-                        document.getElementById('pokemonResult').innerHTML = `<p style="color: red;">${error.message}</p>`;
-                    });
-            } else {
+            if (!name) {
                 alert('Por favor, insira o nome de um Pokémon.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
+                if (response.status !== 200) throw new Error('Pokémon não encontrado');
+                const data = await response.json();
+
+                // Exibe o tipo por extenso
+                const types = data.types.map(typeInfo => typeInfo.type.name).join(', ');
+
+                document.getElementById('pokemonResult').innerHTML = `
+                    <h2>${data.name.toUpperCase()}</h2>
+                    <img src="${data.sprites.front_default}" alt="${data.name}">
+                    <p>Tipo(s): ${types}</p>
+                    <p>Altura: ${data.height / 10} m</p>
+                    <p>Peso: ${data.weight / 10} kg</p>
+                    <div id="evolutions" style="margin-top: 20px;"></div>
+                `;
+
+                // Busca a cadeia de evolução
+                const speciesResponse = await fetch(data.species.url);
+                const speciesData = await speciesResponse.json();
+
+                // Busca a cadeia de evolução
+                const evolutionResponse = await fetch(speciesData.evolution_chain.url);
+                const evolutionData = await evolutionResponse.json();
+
+                const evolutions = [];
+                let currentEvolution = evolutionData.chain;
+
+                // Percorre a cadeia de evolução para obter todos os estágios e imagens
+                while (currentEvolution) {
+                    const pokemonName = currentEvolution.species.name;
+                    const pokemonData = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonName}`).then(res => res.json());
+                    const sprite = pokemonData.sprites.front_default || 'https://via.placeholder.com/96';
+                    evolutions.push({ name: pokemonName, sprite: sprite });
+                    currentEvolution = currentEvolution.evolves_to[0];
+                }
+
+                // Exibe a cadeia de evolução
+                document.getElementById('evolutions').innerHTML = `
+                    <h3>Evoluções:</h3>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        ${evolutions.map(evolution => `
+                            <div style="text-align: center;">
+                                <img src="${evolution.sprite}" alt="${evolution.name}" width="80">
+                                <p>${evolution.name}</p>
+                            </div>
+                        `).join('<span style="font-size: 20px;"> ➔ </span>')}
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('pokemonResult').innerHTML = `<p style="color: red;">${error.message}</p>`;
             }
         }
     </script>
